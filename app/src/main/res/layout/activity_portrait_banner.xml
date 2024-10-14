@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.xinooo.bannerlib.BannerView
+            android:id="@+id/banner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:indicatorDrawable="@drawable/banner_indicator_yellow"
+            app:pageLimit="2"
+            app:indicatorMarginBottom="60dp"
+            app:pagePaddingHorizontal="15dp"
+            app:pagePaddingVertical="50dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

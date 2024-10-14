@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- BannerView -->
+    <declare-styleable name="BannerView">
+        <!-- 是否顯示指示器 -->
+        <attr name="showIndicator" format="boolean" />
+        <!-- 指示器背景 -->
+        <attr name="indicatorBackground" format="reference|color" />
+        <!-- 指示器 -->
+        <attr name="indicatorDrawable" format="reference" />
+        <!-- 指示器高度 -->
+        <attr name="indicatorHeight" format="dimension">
+            <enum name="match_parent" value="-1" />
+            <enum name="wrap_content" value="-2" />
+        </attr>
+        <!-- 指示器間距 -->
+        <attr name="indicatorSpacing" format="dimension" />
+        <!-- 指示器的位置 -->
+        <attr name="indicatorGravity" format="integer">
+            <flag name="top" value="0x30" />
+            <flag name="bottom" value="0x50" />
+            <flag name="left" value="0x03" />
+            <flag name="right" value="0x05" />
+            <flag name="center_horizontal" value="0x01" />
+            <flag name="center_vertical" value="0x10" />
+            <flag name="center" value="0x11" />
+        </attr>
+        <!-- 指示器左內邊距 -->
+        <attr name="indicatorPaddingStart" format="dimension" />
+        <!-- 指示器右內邊距 -->
+        <attr name="indicatorPaddingEnd" format="dimension" />
+        <!-- 指示器左外邊距 -->
+        <attr name="indicatorMarginStart" format="dimension" />
+        <!-- 指示器右外邊距 -->
+        <attr name="indicatorMarginEnd" format="dimension" />
+        <!-- 指示器上外邊距 -->
+        <attr name="indicatorMarginTop" format="dimension" />
+        <!-- 指示器下外邊距 -->
+        <attr name="indicatorMarginBottom" format="dimension" />
+        <!-- 是否為數位指標 -->
+        <attr name="isNumberIndicator" format="boolean" />
+        <!-- 數字指示器文字顏色 -->
+        <attr name="numberIndicatorTextColor" format="reference|color" />
+        <!-- 數字指示器文字大小 -->
+        <attr name="numberIndicatorTextSize" format="dimension" />
+        <!-- 是否開啟自動輪播 -->
+        <attr name="autoplay" format="boolean" />
+        <!-- 是否開啟循環播放 -->
+        <attr name="loopPlay" format="boolean" />
+        <!-- 自動輪播的時間間隔 -->
+        <attr name="autoplayInterval" format="integer" />
+        <!-- 頁碼切換過程的時間長度 -->
+        <attr name="pageChangeDuration" format="integer" />
+        <!-- viewPager預加載頁面數量 -->
+        <attr name="pageLimit" format="integer" />
+        <!-- 頁面區域距離 BannerView 頂部的距離 -->
+        <attr name="pagePaddingTop" format="dimension" />
+        <!-- 頁面區域距離 BannerView 底部的距離 -->
+        <attr name="pagePaddingBottom" format="dimension" />
+        <!-- 頁面區域距離 BannerView 左邊的距離 -->
+        <attr name="pagePaddingStart" format="dimension" />
+        <!-- 頁面區域距離 BannerView 右邊的距離 -->
+        <attr name="pagePaddingEnd" format="dimension" />
+        <!-- 頁面區域距離 BannerView 的垂直距離 -->
+        <attr name="pagePaddingVertical" format="dimension" />
+        <!-- 頁面區域距離 BannerView 的水平距離 -->
+        <attr name="pagePaddingHorizontal" format="dimension" />
+        <!-- 頁面區域距離 BannerView 的距離 -->
+        <attr name="pagePadding" format="dimension" />
+
+    </declare-styleable>
+
+</resources>
