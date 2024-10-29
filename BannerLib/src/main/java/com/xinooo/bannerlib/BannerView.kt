@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.xinooo.bannerlib.config.BannerConfig
 import com.xinooo.bannerlib.databinding.ItemBannerImageBinding
-import com.xinooo.bannerlib.ext.dp
 import kotlinx.coroutines.*
 
 class BannerView @JvmOverloads constructor(

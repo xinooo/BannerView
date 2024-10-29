@@ -48,7 +48,8 @@
                 android:id="@+id/banner_6"
                 android:layout_width="match_parent"
                 android:layout_marginTop="20dp"
-                android:layout_height="200dp"/>
+                android:layout_height="200dp"
+                app:pagePaddingHorizontal="30dp"/>
 
             <com.xinooo.bannerlib.BannerView
                 android:id="@+id/banner_7"
