@@ -46,6 +46,7 @@ class BannerView @JvmOverloads constructor(
     private var indicatorMarginTop = BannerConfig.INDICATOR_MARGIN_TOP
     private var indicatorMarginBottom = BannerConfig.INDICATOR_MARGIN_BOTTOM
 
+    private var bannerRadius = BannerConfig.BANNER_RADIUS
     private var isNumberIndicator = BannerConfig.IS_NUMBER_INDICATOR
     private var numberIndicatorTextColor = BannerConfig.NUMBER_INDICATOR_TEXT_COLOR
     private var numberIndicatorTextSize = BannerConfig.NUMBER_INDICATOR_TEXT_SIZE
@@ -60,7 +61,7 @@ class BannerView @JvmOverloads constructor(
     private var pagePadding = BannerConfig.PAGE_PADDING
 
     private val viewPager: ViewPager2
-    private var adapter: Adapter<*, *>? = null
+    private var adapter: BannerAdapter<*, *>? = null
     private lateinit var indicatorParent: LinearLayout
     private lateinit var numberTv: TextView
     private val viewScope = MainScope()
@@ -125,6 +126,7 @@ class BannerView @JvmOverloads constructor(
         indicatorMarginEnd = typedArray.getDimensionPixelSize(R.styleable.BannerView_indicatorMarginEnd, indicatorMarginEnd)
         indicatorMarginTop = typedArray.getDimensionPixelSize(R.styleable.BannerView_indicatorMarginTop, indicatorMarginTop)
         indicatorMarginBottom = typedArray.getDimensionPixelSize(R.styleable.BannerView_indicatorMarginBottom, indicatorMarginBottom)
+        bannerRadius =  typedArray.getDimension(R.styleable.BannerView_bannerRadius, bannerRadius)
         isNumberIndicator = typedArray.getBoolean(R.styleable.BannerView_isNumberIndicator, isNumberIndicator)
         numberIndicatorTextColor = typedArray.getColor(R.styleable.BannerView_numberIndicatorTextColor, numberIndicatorTextColor)
         numberIndicatorTextSize = typedArray.getDimensionPixelSize(R.styleable.BannerView_numberIndicatorTextSize, numberIndicatorTextSize)
@@ -174,7 +176,7 @@ class BannerView @JvmOverloads constructor(
         inflater: (LayoutInflater, ViewGroup, Boolean) -> VB,
         bind: (VB, M) -> Unit) {
         dataSize = dataList.size
-        adapter = Adapter(dataList, inflater, bind, loopPlay)
+        adapter = BannerAdapter(dataList, inflater, bind, loopPlay).setRadius(bannerRadius)
         viewPager.adapter = adapter
         if (showIndicator) {
             updateIndicator()

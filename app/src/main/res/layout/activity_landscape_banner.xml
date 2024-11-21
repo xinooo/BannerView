@@ -24,7 +24,8 @@
                 android:layout_width="match_parent"
                 android:layout_marginTop="20dp"
                 android:layout_height="200dp"
-                app:loopPlay="false"/>
+                app:loopPlay="false"
+                app:bannerRadius="10dp"/>
 
             <com.xinooo.bannerlib.BannerView
                 android:id="@+id/banner_3"

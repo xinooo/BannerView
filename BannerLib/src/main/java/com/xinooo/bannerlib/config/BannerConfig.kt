@@ -53,6 +53,8 @@ class BannerConfig {
 
         /* 頁面設置 */
 
+        //頁面圓角
+        val BANNER_RADIUS = 0f.dp
         //頁碼切換過程的時間長度(ms)
         const val PAGE_CHANGE_DURATION = 600
         //viewPager預加載頁面數量

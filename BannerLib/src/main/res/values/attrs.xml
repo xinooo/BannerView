@@ -3,6 +3,8 @@
 
     <!-- BannerView -->
     <declare-styleable name="BannerView">
+        <!-- 頁面圓角 -->
+        <attr name="bannerRadius" format="dimension" />
         <!-- 是否顯示指示器 -->
         <attr name="showIndicator" format="boolean" />
         <!-- 指示器背景 -->
