@@ -182,9 +182,11 @@ class BannerView @JvmOverloads constructor(
             updateIndicator()
         }
         if (dataSize > 0) {
-            val firstItem: Int = if (loopPlay) Int.MAX_VALUE / 2 - Int.MAX_VALUE / 2 % dataList.size else 0
-            viewPager.setCurrentItem(firstItem, false)
-            switchIndicator(firstItem)
+            viewPager.post {
+                val firstItem: Int = if (loopPlay) Int.MAX_VALUE / 2 - Int.MAX_VALUE / 2 % dataList.size else 0
+                viewPager.setCurrentItem(firstItem, false)
+                switchIndicator(firstItem)
+            }
         }
         if (autoplay) {
             startAutoplay()
