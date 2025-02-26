@@ -184,12 +184,14 @@ class BannerView @JvmOverloads constructor(
         if (dataSize > 0) {
             viewPager.post {
                 val firstItem: Int = if (loopPlay) Int.MAX_VALUE / 2 - Int.MAX_VALUE / 2 % dataList.size else 0
+                stopAutoplay()
                 viewPager.setCurrentItem(firstItem, false)
                 switchIndicator(firstItem)
+
+                if (autoplay) {
+                    startAutoplay()
+                }
             }
-        }
-        if (autoplay) {
-            startAutoplay()
         }
     }
 
@@ -257,13 +259,15 @@ class BannerView @JvmOverloads constructor(
         if (adapter == null) {
             return
         }
-        if (loopPlay) {
-            val realCurrentItem: Int = viewPager.currentItem
-            val currentItem: Int = realCurrentItem % dataSize
-            val offset = item - currentItem
-            viewPager.setCurrentItem(realCurrentItem + offset, false)
-        } else {
-            viewPager.setCurrentItem(item, false)
+        viewPager.post {
+            if (loopPlay) {
+                val realCurrentItem: Int = viewPager.currentItem
+                val currentItem: Int = realCurrentItem % dataSize
+                val offset = item - currentItem
+                viewPager.setCurrentItem(realCurrentItem + offset, false)
+            } else {
+                viewPager.setCurrentItem(item, false)
+            }
         }
     }
 
@@ -336,7 +340,7 @@ class BannerView @JvmOverloads constructor(
                 delay(autoplayInterval.toLong())
                 //無開啟循環播放且播放到做後一張時，跳回第一張繼續播放
                 if (!loopPlay && viewPager.currentItem == dataSize - 1) {
-                    viewPager.setCurrentItem(0, false)
+                    viewPager.post { viewPager.setCurrentItem(0, false) }
                     continue
                 }
                 val item = viewPager.currentItem + 1
@@ -371,6 +375,9 @@ class BannerView @JvmOverloads constructor(
         super.onDetachedFromWindow()
         stopAutoplay()
         viewScope.cancel()
+        if (viewPager.isFakeDragging) {
+            viewPager.endFakeDrag()
+        }
     }
 
     private var previousValue = 0
@@ -384,7 +391,7 @@ class BannerView @JvmOverloads constructor(
         addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator) {
                 previousValue = 0
-                viewPager.beginFakeDrag()
+                viewPager.safeBeginFakeDrag()
             }
 
             override fun onAnimationEnd(animation: Animator) {
@@ -398,6 +405,17 @@ class BannerView @JvmOverloads constructor(
             override fun onAnimationRepeat(animation: Animator) {}
         })
         interpolator = AccelerateDecelerateInterpolator()
+    }
+
+    private fun ViewPager2.safeBeginFakeDrag() {
+        if (isFakeDragging) {
+            endFakeDrag()
+            post {
+                beginFakeDrag()
+            }
+        } else {
+            beginFakeDrag()
+        }
     }
 
     private fun ViewPager2.setCurrentItemWithAnim(
