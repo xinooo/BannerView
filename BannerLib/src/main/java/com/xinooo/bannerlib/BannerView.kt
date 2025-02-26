@@ -68,6 +68,7 @@ class BannerView @JvmOverloads constructor(
     private var autoplayJob: Job? = null
     private var allowUserScrollable = true
     private var dataSize = 0
+    private var listener: OnPageChangeListener? = null
 
     init {
         initCustomAttrs(context, attrs)
@@ -232,8 +233,9 @@ class BannerView @JvmOverloads constructor(
     //切換指示器選中項
     @SuppressLint("SetTextI18n")
     private fun switchIndicator(position: Int) {
+        val realPosition = position % dataSize
+        listener?.onPageSelected(realPosition)
         if (showIndicator && adapter != null) {
-            val realPosition = position % dataSize
             if (isNumberIndicator) {
                 numberTv.text = "${realPosition + 1}/$dataSize"
             } else {
@@ -295,6 +297,10 @@ class BannerView @JvmOverloads constructor(
     fun setPageTransformer(transformer: ViewPager2.PageTransformer?): BannerView {
         viewPager.setPageTransformer(transformer)
         return this
+    }
+
+    fun setOnPageChangeListener(listener: OnPageChangeListener?) {
+        this.listener = listener
     }
 
     private var isObserverAdded = false
@@ -430,6 +436,10 @@ class BannerView @JvmOverloads constructor(
         pageChangeAnimator.setIntValues(0, pxToDrag)
         pageChangeAnimator.duration = duration
         pageChangeAnimator.start()
+    }
+
+    interface OnPageChangeListener {
+        fun onPageSelected(position: Int)
     }
 
 }
