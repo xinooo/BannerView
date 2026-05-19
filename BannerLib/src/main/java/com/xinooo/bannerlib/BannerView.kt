@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Outline
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
@@ -75,8 +76,20 @@ class BannerView @JvmOverloads constructor(
         get() = adapter?.realCount ?: 0
     private var lastRealPosition = -1 // 最後選中項
 
+    /**
+     * 圓角裁剪提供者：動態抓取 View 尺寸並設置圓角路徑
+     * 系統繪製時會自動調用此 Provider
+     */
+    private val bannerOutlineProvider = object : ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: Outline) {
+            outline.setRoundRect(0, 0, view.width, view.height, bannerRadius)
+        }
+    }
+
     init {
         initCustomAttrs(context, attrs)
+        // 初始化圓角設置
+        applyBannerRadius()
         viewPager = ViewPager2(context)
         viewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
         viewPager.offscreenPageLimit = pageLimit
@@ -111,6 +124,34 @@ class BannerView @JvmOverloads constructor(
         if (showIndicator) {
             initIndicatorParent()
         }
+    }
+
+    /**
+     * 應用圓角裁剪邏輯
+     * 當 bannerRadius > 0 時開啟 clipToOutline，強制裁切 ViewPager2 邊緣
+     */
+    private fun applyBannerRadius() {
+        if (bannerRadius > 0) {
+            outlineProvider = bannerOutlineProvider
+            clipToOutline = true
+        } else {
+            outlineProvider = ViewOutlineProvider.BACKGROUND
+            clipToOutline = false
+        }
+        // 通知系統重新計算 Outline 區域
+        invalidateOutline()
+    }
+
+    /**
+     * 動態設置 Banner 圓角半徑
+     * @param radius 圓角半徑 (單位 px)
+     */
+    fun setBannerRadius(radius: Float): BannerView {
+        this.bannerRadius = radius
+        applyBannerRadius()
+        // 同步更新 Adapter 內部的 Item 圓角
+        adapter?.setRadius(radius)
+        return this
     }
 
     private fun initCustomAttrs(context: Context, attrs: AttributeSet?) {
@@ -308,6 +349,11 @@ class BannerView @JvmOverloads constructor(
 
     fun setOnPageChangeListener(listener: OnPageChangeListener?) {
         this.listener = listener
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        applyBannerRadius()
     }
 
     override fun onAttachedToWindow() {

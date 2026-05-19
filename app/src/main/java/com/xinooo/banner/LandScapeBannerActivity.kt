@@ -45,6 +45,7 @@ class LandScapeBannerActivity : AppCompatActivity(){
 
         binding.banner3.addBannerLifecycleObserver(this)
             .setPageTransformer(FlipPageTransformer())
+            .setBannerRadius(50f)
             .setData(adList) { bannerBinding, data ->
                 setImg(bannerBinding.img, data)
                 bannerBinding.img.setOnClickListener(OnBannerClickListener(this, data))
@@ -52,6 +53,7 @@ class LandScapeBannerActivity : AppCompatActivity(){
 
         binding.banner4.addBannerLifecycleObserver(this)
             .setPageTransformer(ParallaxTransformer())
+            .setBannerRadius(50f)
             .setData(adList) { bannerBinding, data ->
                 setImg(bannerBinding.img, data)
                 bannerBinding.img.setOnClickListener(OnBannerClickListener(this, data))

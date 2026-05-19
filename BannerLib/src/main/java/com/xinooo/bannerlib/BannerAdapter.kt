@@ -37,6 +37,7 @@ class BannerAdapter<VB : ViewDataBinding, M>(
 
     fun setRadius(radius: Float): BannerAdapter<*,*> {
         this.radius = radius
+        notifyDataSetChanged()
         return this
     }
 
