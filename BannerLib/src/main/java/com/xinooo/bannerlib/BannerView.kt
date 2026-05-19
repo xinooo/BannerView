@@ -11,10 +11,11 @@ import android.util.TypedValue
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.*
-import androidx.core.view.children
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.xinooo.bannerlib.config.BannerConfig
@@ -27,7 +28,9 @@ class BannerView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), DefaultLifecycleObserver {
 
-    private val TAG = "BannerView"
+    companion object {
+        private const val TAG = "BannerView"
+    }
 
     private var autoplay = BannerConfig.AUTOPLAY
     private var loopPlay = BannerConfig.LOOP_PLAY
@@ -41,7 +44,7 @@ class BannerView @JvmOverloads constructor(
     private var indicatorGravity = BannerConfig.INDICATOR_GRAVITY
     private var indicatorPaddingStart = BannerConfig.INDICATOR_PADDING_START
     private var indicatorPaddingEnd = BannerConfig.INDICATOR_PADDING_END
-    private var indicatorMarginStart = BannerConfig.INDICATOR_MARGINS_TART
+    private var indicatorMarginStart = BannerConfig.INDICATOR_MARGINS_START
     private var indicatorMarginEnd = BannerConfig.INDICATOR_MARGIN_END
     private var indicatorMarginTop = BannerConfig.INDICATOR_MARGIN_TOP
     private var indicatorMarginBottom = BannerConfig.INDICATOR_MARGIN_BOTTOM
@@ -64,11 +67,13 @@ class BannerView @JvmOverloads constructor(
     private var adapter: BannerAdapter<*, *>? = null
     private lateinit var indicatorParent: LinearLayout
     private lateinit var numberTv: TextView
-    private val viewScope = MainScope()
     private var autoplayJob: Job? = null
     private var allowUserScrollable = true
-    private var dataSize = 0
     private var listener: OnPageChangeListener? = null
+
+    private val realDataCount: Int
+        get() = adapter?.realCount ?: 0
+    private var lastRealPosition = -1 // 最後選中項
 
     init {
         initCustomAttrs(context, attrs)
@@ -176,18 +181,16 @@ class BannerView @JvmOverloads constructor(
         dataList: List<M>,
         inflater: (LayoutInflater, ViewGroup, Boolean) -> VB,
         bind: (VB, M) -> Unit) {
-        dataSize = dataList.size
-        adapter = BannerAdapter(dataList, inflater, bind, loopPlay).setRadius(bannerRadius)
+        adapter = BannerAdapter(dataList.toMutableList(), inflater, bind, loopPlay).setRadius(bannerRadius)
         viewPager.adapter = adapter
         if (showIndicator) {
             updateIndicator()
         }
-        if (dataSize > 0) {
+        if (realDataCount > 0) {
             viewPager.post {
-                val firstItem: Int = if (loopPlay) Int.MAX_VALUE / 2 - Int.MAX_VALUE / 2 % dataList.size else 0
+                val firstItem: Int = if (loopPlay) Int.MAX_VALUE / 2 - Int.MAX_VALUE / 2 % realDataCount else 0
                 stopAutoplay()
                 viewPager.setCurrentItem(firstItem, false)
-                switchIndicator(firstItem)
 
                 if (autoplay) {
                     startAutoplay()
@@ -199,12 +202,14 @@ class BannerView @JvmOverloads constructor(
     //更新指示器數量
     private fun updateIndicator() {
         indicatorParent.removeAllViews()
+        if (realDataCount <= 0) return
         if (!isNumberIndicator) {
-            for (i in 0 until dataSize) {
+            for (i in 0 until realDataCount) {
                 val imageView = ImageView(context).apply {
                     setImageResource(indicatorDrawableResId)
+                    layoutParams = getIndicatorLayoutParams(i, realDataCount)
                 }
-                indicatorParent.addView(imageView, getIndicatorLayoutParams(i, dataSize))
+                indicatorParent.addView(imageView)
             }
         } else {
             numberTv = TextView(context).apply {
@@ -233,17 +238,20 @@ class BannerView @JvmOverloads constructor(
     //切換指示器選中項
     @SuppressLint("SetTextI18n")
     private fun switchIndicator(position: Int) {
-        val realPosition = position % dataSize
+        if (realDataCount <= 0) return
+        val realPosition = position % realDataCount
         listener?.onPageSelected(realPosition)
         if (showIndicator && adapter != null) {
             if (isNumberIndicator) {
-                numberTv.text = "${realPosition + 1}/$dataSize"
+                numberTv.text = "${realPosition + 1}/$realDataCount"
             } else {
-                indicatorParent.children.forEachIndexed { index, child ->
-                    child.isSelected = index == realPosition
-                    child.layoutParams = getIndicatorLayoutParams(index, dataSize)
-                    child.invalidate()
+                if (lastRealPosition >= 0 && lastRealPosition < indicatorParent.childCount) {
+                    indicatorParent.getChildAt(lastRealPosition).isSelected = false
                 }
+                if (realPosition < indicatorParent.childCount) {
+                    indicatorParent.getChildAt(realPosition).isSelected = true
+                }
+                lastRealPosition = realPosition
             }
         }
     }
@@ -258,17 +266,16 @@ class BannerView @JvmOverloads constructor(
     }
 
     fun setCurrentItem(item: Int) {
-        if (adapter == null) {
-            return
-        }
-        viewPager.post {
-            if (loopPlay) {
-                val realCurrentItem: Int = viewPager.currentItem
-                val currentItem: Int = realCurrentItem % dataSize
-                val offset = item - currentItem
-                viewPager.setCurrentItem(realCurrentItem + offset, false)
-            } else {
-                viewPager.setCurrentItem(item, false)
+        adapter?.let {
+            viewPager.post {
+                if (loopPlay) {
+                    val realCurrentItem: Int = viewPager.currentItem
+                    val currentItem: Int = realCurrentItem % realDataCount
+                    val offset = item - currentItem
+                    viewPager.setCurrentItem(realCurrentItem + offset, false)
+                } else {
+                    viewPager.setCurrentItem(item, false)
+                }
             }
         }
     }
@@ -303,6 +310,13 @@ class BannerView @JvmOverloads constructor(
         this.listener = listener
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (autoplay) {
+            startAutoplay()
+        }
+    }
+
     private var isObserverAdded = false
     fun addBannerLifecycleObserver(owner: LifecycleOwner?): BannerView {
         if (owner != null && !isObserverAdded) {
@@ -326,6 +340,10 @@ class BannerView @JvmOverloads constructor(
         stopAutoplay()
     }
 
+    override fun onDestroy(owner: LifecycleOwner) {
+        owner.lifecycle.removeObserver(this)
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (autoplay && allowUserScrollable) {
             when (ev.action) {
@@ -337,15 +355,15 @@ class BannerView @JvmOverloads constructor(
     }
 
     private fun startAutoplay() {
-        if (adapter == null || dataSize <= 1 || visibility != VISIBLE) {
+        if (adapter == null || realDataCount <= 1 || visibility != VISIBLE) {
             return
         }
         stopAutoplay()
-        autoplayJob = viewScope.launch {
+        autoplayJob = findViewTreeLifecycleOwner()?.lifecycleScope?.launch {
             while (isActive) {
                 delay(autoplayInterval.toLong())
                 //無開啟循環播放且播放到做後一張時，跳回第一張繼續播放
-                if (!loopPlay && viewPager.currentItem == dataSize - 1) {
+                if (!loopPlay && viewPager.currentItem == realDataCount - 1) {
                     viewPager.post { viewPager.setCurrentItem(0, false) }
                     continue
                 }
@@ -356,7 +374,6 @@ class BannerView @JvmOverloads constructor(
                     else -> viewPager.width - pagePaddingStart - pagePaddingEnd
                 }
                 viewPager.setCurrentItemWithAnim(item, pageChangeDuration.toLong(), pagePxWidth)
-                switchIndicator(item)
             }
         }
     }
@@ -375,15 +392,14 @@ class BannerView @JvmOverloads constructor(
     private fun stopAutoplay() {
         autoplayJob?.cancel()
         autoplayJob = null
+        if (viewPager.isFakeDragging) {
+            viewPager.endFakeDrag()
+        }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         stopAutoplay()
-        viewScope.cancel()
-        if (viewPager.isFakeDragging) {
-            viewPager.endFakeDrag()
-        }
     }
 
     private var previousValue = 0
@@ -427,15 +443,20 @@ class BannerView @JvmOverloads constructor(
     private fun ViewPager2.setCurrentItemWithAnim(
         item: Int,
         duration: Long,
-        pagePxWidth: Int = width,
-    ) {
-        if (pagePxWidth <= 0) {
-            return
+        pagePxWidth: Int = width) {
+        if (pagePxWidth <= 0) return
+        if (pageChangeAnimator.isRunning) {
+            pageChangeAnimator.cancel()
         }
         val pxToDrag: Int = pagePxWidth * (item - currentItem)
         pageChangeAnimator.setIntValues(0, pxToDrag)
         pageChangeAnimator.duration = duration
         pageChangeAnimator.start()
+    }
+
+    fun clear() {
+        adapter?.clear()
+        indicatorParent.removeAllViews()
     }
 
     interface OnPageChangeListener {

@@ -7,13 +7,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xinooo.bannerlib.databinding.ItemBannerImageBinding
 
 class BannerAdapter<VB : ViewDataBinding, M>(
-    private val dataList: List<M>,
+    private val dataList: MutableList<M>,
     private val inflater: (LayoutInflater, ViewGroup, Boolean) -> VB,
     private val bind: (VB, M) -> Unit,
     private val loopPlay: Boolean
 ) : RecyclerView.Adapter<BannerAdapter<VB, M>.ViewHolder>() {
 
-    private val dataSize by lazy { dataList.size }
+    val realCount: Int get() = dataList.size
     private var radius = 0f
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -22,20 +22,27 @@ class BannerAdapter<VB : ViewDataBinding, M>(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(dataList[position % dataList.size])
+        if (realCount > 0) {
+            holder.bind(dataList[position % realCount])
+        }
     }
 
     override fun getItemCount(): Int {
-        return if (loopPlay && dataSize > 1) {
+        return if (loopPlay && realCount > 1) {
             Integer.MAX_VALUE
         } else {
-            dataList.size
+            realCount
         }
     }
 
     fun setRadius(radius: Float): BannerAdapter<*,*> {
         this.radius = radius
         return this
+    }
+
+    fun clear() {
+        dataList.clear()
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(private val itemBinding: VB) :

@@ -37,7 +37,7 @@ class BannerConfig {
         //指示器右內邊距
         val INDICATOR_PADDING_END = INDICATOR_SPACING
         //指示器左外邊距
-        val INDICATOR_MARGINS_TART = 16.dp
+        val INDICATOR_MARGINS_START = 16.dp
         //指示器右外邊距
         val INDICATOR_MARGIN_END = 16.dp
         //指示器上外邊距
